@@ -7,11 +7,12 @@ Type=simple
 User=root
 WorkingDirectory=/root/cap/CAPCHFOBOT
 Environment=PATH=/root/cap/venv/bin:$PATH
-ExecStart=/root/cap/venv/bin/python /root/cap/CAPCHFOBOT/bot.py
+ExecStart=/root/cap/venv/bin/python -u /root/cap/CAPCHFOBOT/bot.py
 Restart=always
 RestartSec=10
 StandardOutput=append:/var/log/captcha_bot.log
 StandardError=append:/var/log/captcha_bot_error.log
+Environment=PYTHONUNBUFFERED=1
 
 [Install]
 WantedBy=multi-user.target 

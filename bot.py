@@ -7,7 +7,8 @@ from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command, ChatMemberUpdatedFilter, ADMINISTRATOR
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ChatMemberUpdated
-from captcha.image import ImageCaptcha
+from PIL import Image, ImageDraw, ImageFont
+import io
 import asyncio
 
 load_dotenv()
@@ -42,9 +43,33 @@ load_settings()
 
 def generate_captcha():
     captcha_text = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-    image = ImageCaptcha(width=280, height=90)
-    captcha_image = image.generate(captcha_text)
-    return captcha_text, captcha_image
+    width = 280
+    height = 90
+    image = Image.new('RGB', (width, height), color='white')
+    draw = ImageDraw.Draw(image)
+    
+    font_size = 36
+    font = ImageFont.load_default()
+    
+    bbox = draw.textbbox((0, 0), captcha_text, font=font)
+    text_width = bbox[2] - bbox[0]
+    text_height = bbox[3] - bbox[1]
+    
+    x = (width - text_width) // 2
+    y = (height - text_height) // 2
+    
+    draw.text((x, y), captcha_text, font=font, fill='black')
+    
+    for _ in range(1000):
+        x = random.randint(0, width-1)
+        y = random.randint(0, height-1)
+        draw.point((x, y), fill='black')
+    
+    img_byte_arr = io.BytesIO()
+    image.save(img_byte_arr, format='PNG')
+    img_byte_arr.seek(0)
+    
+    return captcha_text, img_byte_arr
 
 async def generate_unique_link():
     if not channel_id:
