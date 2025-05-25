@@ -5,9 +5,9 @@ After=network.target
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/root/cap
+WorkingDirectory=/root/cap/CAPCHFOBOT
 Environment=PATH=/root/cap/venv/bin:$PATH
-ExecStart=/root/cap/venv/bin/python bot.py
+ExecStart=/root/cap/venv/bin/python /root/cap/CAPCHFOBOT/bot.py
 Restart=always
 RestartSec=10
 StandardOutput=append:/var/log/captcha_bot.log

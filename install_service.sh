@@ -6,8 +6,8 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-BOT_DIR="/root/cap"
-VENV_DIR="$BOT_DIR/venv"
+BOT_DIR="/root/cap/CAPCHFOBOT"
+VENV_DIR="/root/cap/venv"
 
 # Создание виртуального окружения если его нет
 if [ ! -d "$VENV_DIR" ]; then
