@@ -1,0 +1,17 @@
+[Unit]
+Description=Telegram Captcha Bot Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/cap
+Environment=PATH=/root/cap/venv/bin:$PATH
+ExecStart=/root/cap/venv/bin/python bot.py
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/captcha_bot.log
+StandardError=append:/var/log/captcha_bot_error.log
+
+[Install]
+WantedBy=multi-user.target 
