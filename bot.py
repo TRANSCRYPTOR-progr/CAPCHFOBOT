@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command, ChatMemberUpdatedFilter, ADMINISTRATOR
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ChatMemberUpdated
-from captcha.image import ImageCaptcha
+from PIL import Image, ImageDraw
 import io
 import asyncio
 
@@ -42,21 +42,46 @@ def save_settings():
 load_settings()
 
 def generate_captcha():
-    # Создаем объект ImageCaptcha с улучшенными параметрами
-    image_captcha = ImageCaptcha(
-        width=400,
-        height=120,
-        font_sizes=[65]
-    )
-    
     # Генерируем случайный текст капчи
     captcha_text = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
     
-    # Генерируем изображение
-    img_bytes = image_captcha.generate(captcha_text)
+    # Создаем изображение
+    width = 400
+    height = 120
+    image = Image.new('RGB', (width, height), color='white')
+    draw = ImageDraw.Draw(image)
     
-    # Преобразуем в BytesIO объект
-    img_byte_arr = io.BytesIO(img_bytes.read())
+    # Рисуем текст
+    text_x = 50
+    text_y = 35
+    
+    # Рисуем каждую букву отдельно с случайным сдвигом
+    for char in captcha_text:
+        # Случайный сдвиг
+        x = text_x + random.randint(-5, 5)
+        y = text_y + random.randint(-5, 5)
+        
+        # Рисуем символ
+        draw.text((x, y), char, fill='black')
+        text_x += 50  # Расстояние между символами
+    
+    # Добавляем шум
+    for _ in range(400):
+        x = random.randint(0, width-1)
+        y = random.randint(0, height-1)
+        draw.point((x, y), fill='gray')
+    
+    # Добавляем линии
+    for _ in range(8):
+        x1 = random.randint(0, width)
+        y1 = random.randint(0, height)
+        x2 = random.randint(0, width)
+        y2 = random.randint(0, height)
+        draw.line([(x1, y1), (x2, y2)], fill='gray', width=1)
+    
+    # Сохраняем в байты
+    img_byte_arr = io.BytesIO()
+    image.save(img_byte_arr, format='PNG')
     img_byte_arr.seek(0)
     
     return captcha_text, img_byte_arr
