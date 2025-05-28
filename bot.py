@@ -10,7 +10,6 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ChatMember
 from PIL import Image, ImageDraw, ImageFont
 import io
 import asyncio
-from captcha.image import ImageCaptcha
 
 load_dotenv()
 
@@ -22,21 +21,6 @@ SETTINGS_FILE = 'bot_settings.json'
 users_data = {}
 used_links = {}
 channel_id = None
-
-# Список возможных системных шрифтов
-POSSIBLE_FONTS = [
-    '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
-    '/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf',
-    '/usr/share/fonts/liberation/LiberationSans-Bold.ttf',
-    '/usr/share/fonts/TTF/DejaVuSans-Bold.ttf',
-    '/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf'
-]
-
-def get_available_font():
-    for font_path in POSSIBLE_FONTS:
-        if os.path.exists(font_path):
-            return font_path
-    return None
 
 def load_settings():
     global channel_id
@@ -58,27 +42,43 @@ def save_settings():
 load_settings()
 
 def generate_captcha():
-    # Получаем доступный шрифт
-    font_path = get_available_font()
-    
-    # Создаем генератор капчи с увеличенными размерами
-    if font_path:
-        image_captcha = ImageCaptcha(width=400, height=120, fonts=[font_path])
-    else:
-        # Если ни один шрифт не найден, используем стандартные настройки
-        image_captcha = ImageCaptcha(width=400, height=120)
-    
-    # Генерируем случайный текст
     captcha_text = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    width = 400
+    height = 120
+    image = Image.new('RGB', (width, height), color='#f0f0f0')
+    draw = ImageDraw.Draw(image)
     
-    # Генерируем изображение
-    img_bytes = image_captcha.generate(captcha_text)
+    try:
+        font = ImageFont.truetype("arial.ttf", 60)
+    except:
+        font = ImageFont.load_default()
+        
+    spaced_text = ' '.join(captcha_text)
     
-    # Преобразуем в байты для отправки
-    img_byte_arr = io.BytesIO(img_bytes.getvalue())
+    bbox = draw.textbbox((0, 0), spaced_text, font=font)
+    text_width = bbox[2] - bbox[0]
+    text_height = bbox[3] - bbox[1]
+    
+    x = (width - text_width) // 2
+    y = (height - text_height) // 2
+    
+    draw.text((x, y), spaced_text, font=font, fill='black')
+    
+    for _ in range(400):
+        x = random.randint(0, width-1)
+        y = random.randint(0, height-1)
+        draw.point((x, y), fill='#808080')
+    
+    for _ in range(4):
+        start = (random.randint(0, width), random.randint(0, height))
+        end = (random.randint(0, width), random.randint(0, height))
+        draw.line([start, end], fill='#a0a0a0', width=2)
+    
+    img_byte_arr = io.BytesIO()
+    image.save(img_byte_arr, format='PNG')
     img_byte_arr.seek(0)
     
-    return captcha_text, img_byte_arr
+    return captcha_text.replace(' ', ''), img_byte_arr
 
 async def generate_unique_link():
     if not channel_id:
