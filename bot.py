@@ -46,8 +46,7 @@ def generate_captcha():
     image_captcha = ImageCaptcha(
         width=400,
         height=120,
-        fonts=['arial.ttf'],
-        font_sizes=[65],
+        font_sizes=[65]
     )
     
     # Генерируем случайный текст капчи
