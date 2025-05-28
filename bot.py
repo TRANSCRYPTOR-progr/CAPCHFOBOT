@@ -23,6 +23,21 @@ users_data = {}
 used_links = {}
 channel_id = None
 
+# Список возможных системных шрифтов
+POSSIBLE_FONTS = [
+    '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
+    '/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf',
+    '/usr/share/fonts/liberation/LiberationSans-Bold.ttf',
+    '/usr/share/fonts/TTF/DejaVuSans-Bold.ttf',
+    '/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf'
+]
+
+def get_available_font():
+    for font_path in POSSIBLE_FONTS:
+        if os.path.exists(font_path):
+            return font_path
+    return None
+
 def load_settings():
     global channel_id
     try:
@@ -43,8 +58,15 @@ def save_settings():
 load_settings()
 
 def generate_captcha():
+    # Получаем доступный шрифт
+    font_path = get_available_font()
+    
     # Создаем генератор капчи с увеличенными размерами
-    image_captcha = ImageCaptcha(width=400, height=120, fonts=['arial.ttf'])
+    if font_path:
+        image_captcha = ImageCaptcha(width=400, height=120, fonts=[font_path])
+    else:
+        # Если ни один шрифт не найден, используем стандартные настройки
+        image_captcha = ImageCaptcha(width=400, height=120)
     
     # Генерируем случайный текст
     captcha_text = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
