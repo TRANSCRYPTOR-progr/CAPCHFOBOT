@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command, ChatMemberUpdatedFilter, ADMINISTRATOR
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ChatMemberUpdated
-from PIL import Image, ImageDraw, ImageFont
+from captcha.image import ImageCaptcha
 import io
 import asyncio
 
@@ -42,43 +42,25 @@ def save_settings():
 load_settings()
 
 def generate_captcha():
+    # Создаем объект ImageCaptcha с улучшенными параметрами
+    image_captcha = ImageCaptcha(
+        width=400,
+        height=120,
+        fonts=['arial.ttf'],
+        font_sizes=[65],
+    )
+    
+    # Генерируем случайный текст капчи
     captcha_text = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-    width = 400
-    height = 120
-    image = Image.new('RGB', (width, height), color='#f0f0f0')
-    draw = ImageDraw.Draw(image)
     
-    try:
-        font = ImageFont.truetype("arial.ttf", 60)
-    except:
-        font = ImageFont.load_default()
-        
-    spaced_text = ' '.join(captcha_text)
+    # Генерируем изображение
+    img_bytes = image_captcha.generate(captcha_text)
     
-    bbox = draw.textbbox((0, 0), spaced_text, font=font)
-    text_width = bbox[2] - bbox[0]
-    text_height = bbox[3] - bbox[1]
-    
-    x = (width - text_width) // 2
-    y = (height - text_height) // 2
-    
-    draw.text((x, y), spaced_text, font=font, fill='black')
-    
-    for _ in range(400):
-        x = random.randint(0, width-1)
-        y = random.randint(0, height-1)
-        draw.point((x, y), fill='#808080')
-    
-    for _ in range(4):
-        start = (random.randint(0, width), random.randint(0, height))
-        end = (random.randint(0, width), random.randint(0, height))
-        draw.line([start, end], fill='#a0a0a0', width=2)
-    
-    img_byte_arr = io.BytesIO()
-    image.save(img_byte_arr, format='PNG')
+    # Преобразуем в BytesIO объект
+    img_byte_arr = io.BytesIO(img_bytes.read())
     img_byte_arr.seek(0)
     
-    return captcha_text.replace(' ', ''), img_byte_arr
+    return captcha_text, img_byte_arr
 
 async def generate_unique_link():
     if not channel_id:
